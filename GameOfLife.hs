@@ -1,12 +1,13 @@
 -- Conway's Game of Life
 
-import Data.Array.IArray
-import System.Random
 import Control.Applicative
 import Control.Concurrent
 import Control.Monad.State
 import Control.Monad
+import Data.Array.IArray
 import Data.List
+import System.Environment
+import System.Random
 
 newtype Grid = Grid { cells :: Array (Int, Int) Bool }
   deriving (Eq, Ord, Read)
@@ -24,12 +25,9 @@ instance Show Grid where
           gridLines = [gridLine n | n <- [0..rows]]
           gridLine row = ('|' : [(if ((cells g) ! (column, row)) then '#' else ' ') | column <- [0..columns]]) ++ "|"
            
-msBetweenIterations = 2000
+microsBetweenIterations = 1000000
 
 -- Helpful wrappers for Random typeclass in State monad
-randomSt :: (RandomGen g, Random a) => State g a
-randomSt = state random
-
 randomRSt :: (RandomGen g, Random a) => (a, a) -> State g a
 randomRSt = state . randomR
 
@@ -68,8 +66,15 @@ neighbours a = array (bounds a) (map (\c -> (c, neighboursFor c)) (indices a))
         wrap min max n = mod (n - min) (max - min) + min
         wrapX = wrap minX maxX
         wrapY = wrap minY maxY
-        neighbourIndices x y = [((wrapX n), (wrapY n)) | (n, m) <-
-                                   [(x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)]]
+        neighbourIndices x y = [((wrapX n), (wrapY m)) | (n, m) <-
+                                   [(x - 1, y - 1),
+                                    (x, y - 1),
+                                    (x + 1, y - 1),
+                                    (x - 1, y),
+                                    (x + 1, y),
+                                    (x - 1, y + 1),
+                                    (x, y + 1),
+                                    (x + 1, y + 1)]]
         neighboursFor (x, y) = map (a !) (neighbourIndices x y)
         
 -- Lives on in the next generation given whether alive now and how many neighbours alive
@@ -91,9 +96,10 @@ nextGrid (Grid a) = Grid $ array (bounds a) (map (argAnd alive) (indices a))
 printLoop :: Grid -> IO ()
 printLoop grid = do 
   print grid
+  threadDelay microsBetweenIterations
   printLoop (nextGrid grid)
 
 main = do
+  columns : rows : [] <- getArgs
   randomGen <- getStdGen
-  let (initialGrid, _) = runState (randomGrid (10, 10)) randomGen in
-    printLoop initialGrid
+  printLoop $ fst $ runState (randomGrid (read columns, read rows)) randomGen
