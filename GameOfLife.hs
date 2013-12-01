@@ -15,7 +15,7 @@ newtype Grid = Grid { cells :: Array (Int, Int) Bool }
 data Coordinate = Coordinate { x :: Int, y :: Int }
   deriving (Eq, Ord, Read, Show)
            
--- There must be a way to make this nicer ... Ben James?
+-- There must be a way to make this nicer ... 
 instance Show Grid where
   show g = unlines allLines
     where allLines :: [String]
@@ -55,9 +55,9 @@ randomGrid :: (RandomGen g) => (Int, Int) -> State g Grid
 randomGrid (columns, rows) = 
   do
     initiallyAlive <- randomRSt (0, columns * rows)
-    livingCells <- nRandomRsSt initiallyAlive (Coordinate 0 0, Coordinate columns rows)
-    let initializations = [((x c, y c), c `elem` livingCells) | c <- coordinates (columns, rows)] in
-      return $ Grid $ array ((0, 0), (columns, rows)) initializations
+    livingCells <- nRandomRsSt initiallyAlive (Coordinate 0 0, Coordinate (columns - 1) (rows - 1))
+    let initializations = [((x c, y c), c `elem` livingCells) | c <- coordinates (columns - 1, rows - 1)] in
+      return $ Grid $ array ((0, 0), (columns - 1, rows - 1)) initializations
 
 neighbours :: Array (Int, Int) a -> Array (Int, Int) [a]
 neighbours a = array (bounds a) (map (\c -> (c, neighboursFor c)) (indices a))
