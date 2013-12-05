@@ -66,15 +66,8 @@ neighbours a = array (bounds a) (map (\c -> (c, neighboursFor c)) (indices a))
         wrap min max n = mod (n - min) (max - min) + min
         wrapX = wrap minX maxX
         wrapY = wrap minY maxY
-        neighbourIndices x y = [((wrapX n), (wrapY m)) | (n, m) <-
-                                   [(x - 1, y - 1),
-                                    (x, y - 1),
-                                    (x + 1, y - 1),
-                                    (x - 1, y),
-                                    (x + 1, y),
-                                    (x - 1, y + 1),
-                                    (x, y + 1),
-                                    (x + 1, y + 1)]]
+        neighbourIndices x y = 
+          [(wrapX (x + i), wrapY (y + j)) | i <- [-1,0,1], j <- [-1,0,1], (i, j) /= (0, 0)]
         neighboursFor (x, y) = map (a !) (neighbourIndices x y)
         
 -- Lives on in the next generation given whether alive now and how many neighbours alive
